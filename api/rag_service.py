@@ -67,15 +67,15 @@ class RAGService:
             return True
         return False
 
-    def get_auth_url(self):
+    def get_auth_url(self, redirect_uri: str = None):
         from connectors.google_drive import GoogleDriveConnector
         connector = GoogleDriveConnector()
-        return connector.get_auth_url()
+        return connector.get_auth_url(redirect_uri=redirect_uri)
 
-    def complete_auth(self, code: str):
+    def complete_auth(self, code: str, redirect_uri: str = None):
         from connectors.google_drive import GoogleDriveConnector
         connector = GoogleDriveConnector()
-        return connector.fetch_token(code)
+        return connector.fetch_token(code, redirect_uri=redirect_uri)
 
     def is_authenticated(self):
         from connectors.google_drive import GoogleDriveConnector
