@@ -21,8 +21,9 @@ class GroqProvider(LLMProvider):
     def generate_answer(self, query: str, context: str) -> str:
         prompt = f"""
 You are a helpful assistant. Use the following pieces of retrieved context to answer the user's question.
-If you don't know the answer, just say that you don't know.
-Use three sentences maximum and keep the answer concise.
+1. If the context contains the answer, use three sentences maximum and keep it concise.
+2. If the context DOES NOT contain the answer or is irrelevant, you MUST strictly answer: "There is no file found containing information on this topic."
+3. Do not use your own knowledge outside of the context provided.
 
 Context:
 {context}
@@ -50,8 +51,9 @@ class AnthropicProvider(LLMProvider):
     def generate_answer(self, query: str, context: str) -> str:
         prompt = f"""
 You are a helpful assistant. Use the following pieces of retrieved context to answer the user's question.
-If you don't know the answer, just say that you don't know.
-Use three sentences maximum and keep the answer concise.
+1. If the context contains the answer, use three sentences maximum and keep it concise.
+2. If the context DOES NOT contain the answer or is irrelevant, you MUST strictly answer: "There is no file found containing information on this topic."
+3. Do not use your own knowledge outside of the context provided.
 
 Context:
 {context}

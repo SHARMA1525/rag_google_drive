@@ -1,301 +1,309 @@
 import streamlit as st
 import requests
 import time
-
 import os
+from datetime import datetime
 
+# --- Configuration ---
 BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
-TIMEOUT = 600
+TIMEOUT = 60
 
 st.set_page_config(
-    page_title="DriveRAG — Google Drive Assistant",
-    page_icon="🚀",
+    page_title="DriveRAG | Enterprise Intelligence",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
+# --- DARK THEME CSS ---
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap');
 
-html, body, [class*="css"] {
-    font-family: 'Outfit', sans-serif;
+:root {
+    --primary: #4F46E5;
+    --dark-bg: #0B1220;
+    --card-bg: #111827;
+    --border: #1F2937;
+    --text-main: #FFFFFF;
 }
 
-.main {
-    background-color: #f8f9fa;
+/* Main background */
+.stApp {
+    background-color: var(--dark-bg);
+    color: var(--text-main);
 }
 
-.stButton>button {
-    width: 100%;
-    border-radius: 8px;
-    height: 3em;
-    background-color: #4F46E5;
+/* Sidebar */
+[data-testid="stSidebar"] {
+    background-color: #020617;
     color: white;
-    font-weight: 600;
-    border: none;
-    transition: all 0.3s ease;
 }
 
-.stButton>button:hover {
-    background-color: #4338CA;
-    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
-    transform: translateY(-2px);
-}
-
-.answer-box {
-    background-color: white;
-    padding: 2rem;
+/* Cards */
+.main-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
     border-radius: 12px;
-    border-left: 5px solid #4F46E5;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-    margin-bottom: 2rem;
-    line-height: 1.6;
-    color: #374151;
+    padding: 1.5rem;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.4);
 }
 
-.source-tag {
-    display: inline-block;
-    background-color: #E0E7FF;
-    color: #3730A3;
-    padding: 0.2rem 0.6rem;
-    border-radius: 6px;
-    font-size: 0.85rem;
-    margin-right: 0.5rem;
-    margin-bottom: 0.5rem;
-    border: 1px solid #C7D2FE;
-}
-
-.login-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 4rem 2rem;
+/* Input */
+.stTextInput > div > div > input {
     background-color: white;
-    border-radius: 16px;
-    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
-    text-align: center;
-    max-width: 600px;
-    margin: auto;
+    border-radius: 8px;
+    padding: 1rem;
+    font-size: 1.1rem;
+    color: black !important;
 }
 
-h1, h2, h3 {
-    color: #111827;
+/* Buttons */
+.stButton > button {
+    background-color: #1F2937 !important;
+    color: white !important;
+    border-radius: 8px !important;
+    padding: 0.75rem 2rem !important;
+    font-weight: 600 !important;
 }
+
+.stButton > button:hover {
+    background-color: var(--primary) !important;
+}
+
+/* Answer box */
+.answer-box {
+    background-color: var(--card-bg);
+    border-radius: 12px;
+    padding: 2rem;
+    border: 1px solid var(--border);
+    margin-top: 2rem;
+}
+
+.answer-text {
+    font-size: 1.5rem;
+}
+
+/* SOURCES BIG STYLE */
+
+.source-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 20px;
+}
+
+.source-item {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    padding: 18px 24px;
+    border-radius: 10px;
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: white;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.4);
+    transition: all 0.2s ease;
+}
+
+.source-item:hover {
+    transform: translateY(-4px);
+    border-color: var(--primary);
+}
+
 </style>
 """, unsafe_allow_html=True)
 
-def check_auth():
+# --- API Helper ---
+def api_request(method: str, endpoint: str, **kwargs):
     try:
-        res = requests.get(f"{BACKEND_URL}/auth/status", timeout=5)
-        if res.status_code == 200:
-            return res.json().get("authenticated", False)
-    except:
-        return False
-    return False
+        url = f"{BACKEND_URL}{endpoint}"
+        response = requests.request(method, url, timeout=TIMEOUT, **kwargs)
+        return response
+    except Exception as e:
+        st.error(f"Network error: {str(e)}")
+        return None
+
+
+def check_auth():
+    res = api_request("GET", "/auth/status")
+    return res.json().get("authenticated", False) if res else False
+
 
 def get_health():
-    try:
-        res = requests.get(f"{BACKEND_URL}/health", timeout=5)
-        if res.status_code == 200:
-            return res.json()
-    except:
-        pass
-    return {}
+    res = api_request("GET", "/health")
+    return res.json() if res else {}
 
-if 'authenticated' not in st.session_state:
+
+if "authenticated" not in st.session_state:
     st.session_state.authenticated = check_auth()
 
+# --- Sidebar ---
 with st.sidebar:
 
-    st.title("DriveRAG")
+    st.markdown("# DRIVERAG")
+    st.caption("INTERNAL DOCUMENT INTELLIGENCE")
 
     st.divider()
 
-    health_data = get_health()
+    health = get_health()
 
-    if health_data:
-        st.success("System Online")
-        st.info(f"{health_data.get('files_synced', 0)} Files Indexed")
+    if health:
+        st.success("Network Active")
+        st.write(f"Database Records: **{health.get('files_synced', 0)}**")
     else:
-        st.error("System Offline")
+        st.error("Network Offline")
+
+    st.divider()
+
+    st.markdown("### System Information")
+
+    st.markdown("""
+- **LLM Model:** LLaMA3-8B (Groq)
+- **Embedding Model:** all-MiniLM-L6-v2
+- **Vector Store:** FAISS
+- **Retriever:** Similarity Search
+- **Chunk Size:** 500 tokens
+""")
+
+    st.divider()
+
+    last_sync = datetime.now().strftime("%Y-%m-%d %H:%M")
+    st.caption(f"Last Sync: {last_sync}")
 
     st.divider()
 
     if st.session_state.authenticated:
 
-        if st.button("Sync Google Drive"):
+        if st.button("Synchronize Drive"):
 
-            with st.spinner("Syncing and indexing files..."):
+            with st.spinner("Syncing..."):
 
-                try:
-                    res = requests.post(
-                        f"{BACKEND_URL}/sync-drive",
-                        timeout=TIMEOUT
-                    )
+                res = api_request("POST", "/sync-drive")
 
-                    if res.status_code == 200:
+                if res and res.status_code == 200:
+                    st.success("Synchronization complete")
+                    time.sleep(1)
+                    st.rerun()
 
-                        st.success("Sync complete!")
+        if st.button("Reset Session"):
 
-                        st.rerun()
+            res = api_request("POST", "/auth/logout")
 
-                    else:
-
-                        st.error(f"Sync failed: {res.text}")
-
-                except Exception as e:
-
-                    st.error(f"Error: {str(e)}")
-
-        st.divider()
-
-        st.caption("Authenticated with Google Drive")
+            if res and res.status_code == 200:
+                st.session_state.authenticated = False
+                st.rerun()
 
     else:
 
-        st.warning("Action Required: Connect Drive")
+        st.caption("Awaiting authentication")
 
+# --- Main Interface ---
 
 if not st.session_state.authenticated:
 
-    st.markdown("""
-    <div class="login-container">
-        <h1 style="font-size: 2.5rem; margin-bottom: 1rem;">
-            Welcome to DriveRAG
-        </h1>
-        <p style="color: #6B7280; font-size: 1.1rem;">
-            Connect your Google Drive to build a private knowledge base.
-            Search across your documents and get answers instantly.
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
+    st.title("Document Intelligence")
 
-    col1, col2, col3 = st.columns([1, 2, 1])
+    if st.button("Authenticate with Google"):
+
+        res = api_request("GET", "/auth/url")
+
+        if res and res.status_code == 200:
+
+            url = res.json().get("url")
+
+            st.markdown(
+                f"[Continue to Authentication]({url})"
+            )
+
+else:
+
+    st.title("Internal Search")
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        st.markdown("""
+        <div class="main-card">
+        <h3>Vector Database</h3>
+        <h2>FAISS</h2>
+        </div>
+        """, unsafe_allow_html=True)
 
     with col2:
+        st.markdown("""
+        <div class="main-card">
+        <h3>Embedding Model</h3>
+        <h2>MiniLM</h2>
+        </div>
+        """, unsafe_allow_html=True)
 
-        if st.button("Connect Google Drive"):
+    with col3:
+        st.markdown("""
+        <div class="main-card">
+        <h3>LLM Engine</h3>
+        <h2>Groq LLaMA3</h2>
+        </div>
+        """, unsafe_allow_html=True)
 
-            try:
+    st.divider()
 
-                res = requests.get(
-                    f"{BACKEND_URL}/auth/url"
+    query = st.text_input(
+        "Search Query",
+        placeholder="Ask questions about your documents..."
+    )
+
+    if st.button("Execute Search"):
+
+        if query.strip():
+
+            with st.spinner("Searching..."):
+
+                res = api_request(
+                    "POST",
+                    "/ask",
+                    json={"query": query}
                 )
 
-                if res.status_code == 200:
+                if res and res.status_code == 200:
 
-                    url = res.json().get("url")
+                    data = res.json()
 
-                    st.link_button(
-                        "Confirm Connection with Google",
-                        url
+                    st.markdown(
+                        f"""
+                        <div class="answer-box">
+                        <div class="answer-text">
+                        {data.get('answer')}
+                        </div>
+                        </div>
+                        """,
+                        unsafe_allow_html=True
                     )
 
-                    st.info(
-                        "After connecting, refresh this page."
-                    )
+                    sources = data.get("sources", [])
+
+                    if sources:
+
+                        st.markdown("### Sources")
+
+                        st.markdown(
+                            '<div class="source-grid">',
+                            unsafe_allow_html=True
+                        )
+
+                        for s in sources:
+
+                            st.markdown(
+                                f'<div class="source-item">📄 {s}</div>',
+                                unsafe_allow_html=True
+                            )
+
+                        st.markdown(
+                            '</div>',
+                            unsafe_allow_html=True
+                        )
 
                 else:
 
                     st.error(
-                        "Could not fetch auth URL."
-                    )
-
-            except Exception as e:
-
-                st.error(
-                    f"Connection error: {str(e)}"
-                )
-
-else:
-
-    st.title("Ask your Documents")
-
-    st.markdown(
-        "Search across all synced Google Drive files."
-    )
-
-    query = st.text_input(
-        "Search Bar",
-        placeholder="e.g. What are the main findings in the Q3 report?",
-        label_visibility="collapsed"
-    )
-
-    if st.button("Search Knowledge Base"):
-
-        if not query.strip():
-
-            st.warning("Please enter a question.")
-
-        else:
-
-            with st.spinner("Analyzing documents..."):
-
-                try:
-
-                    res = requests.post(
-                        f"{BACKEND_URL}/ask",
-                        json={"query": query},
-                        timeout=TIMEOUT
-                    )
-
-                    if res.status_code == 200:
-
-                        result = res.json()
-
-                        st.markdown(
-                            f"""
-                            <div class="answer-box">
-                                {result.get('answer', 'No answer found.')}
-                            </div>
-                            """,
-                            unsafe_allow_html=True
-                        )
-
-                        st.subheader("📚 Referenced Sources")
-
-                        sources = result.get(
-                            'sources',
-                            []
-                        )
-
-                        if sources:
-
-                            source_html = "".join(
-                                [
-                                    f'<span class="source-tag">📄 {s}</span>'
-                                    for s in sources
-                                ]
-                            )
-
-                            st.markdown(
-                                source_html,
-                                unsafe_allow_html=True
-                            )
-
-                        else:
-
-                            st.caption(
-                                "No specific documents were referenced."
-                            )
-
-                    else:
-
-                        st.error(
-                            f"Search failed: {res.text}"
-                        )
-
-                except Exception as e:
-
-                    st.error(
-                        f"Search error: {str(e)}"
+                        "System error during search."
                     )
 
 st.divider()
-
-st.markdown(
-    "<center><p style='color:#9CA3AF;font-size:0.8rem;'>DriveRAG | Secure AI Knowledge Assistant</p></center>",
-    unsafe_allow_html=True
-)

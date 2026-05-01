@@ -101,6 +101,15 @@ async def auth_callback(code: str):
 async def auth_status():
     return {"authenticated": rag_service.is_authenticated()}
 
+@app.post("/auth/logout")
+async def logout():
+    try:
+        rag_service.logout()
+        return {"status": "success", "message": "Logged out successfully"}
+    except Exception as e:
+        logger.error(f"Logout failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 if __name__ == "__main__":
     import uvicorn
     port = int(os.getenv("PORT", 8000))

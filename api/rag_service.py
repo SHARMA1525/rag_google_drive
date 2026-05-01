@@ -82,6 +82,13 @@ class RAGService:
         connector = GoogleDriveConnector()
         return connector.is_authenticated()
 
+    def logout(self):
+        token_path = 'token.json'
+        if os.path.exists(token_path):
+            os.remove(token_path)
+        logger.info("User logged out, token.json removed")
+        return True
+
     def ask(self, query: str):
         cached_response = self.cache.get(query)
         if cached_response:
@@ -91,7 +98,7 @@ class RAGService:
         relevant_chunks = self.vector_store.search(query_embedding)
         
         if not relevant_chunks:
-            return {"answer": "I couldn't find any relevant information in the documents.", "sources": []}
+            return {"answer": "There is no file found containing information on this topic.", "sources": []}
 
         context = "\n\n".join([c['text'] for c in relevant_chunks])
         sources = list(set([c['metadata']['file_name'] for c in relevant_chunks]))

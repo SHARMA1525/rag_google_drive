@@ -2,33 +2,50 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
+*.so
+*.egg-info/
+dist/
+build/
+database/
 
 venv/
+.env/
 .env
+
 
 credentials.json
 token.json
 *.key
 *.pem
+*.env
+
 
 logs/
 *.log
-database/
+
+
+cache/
+data/
+
+*.index
+*.faiss
+*.npy
+*.pkl
+*.bin
+
 *.db
 *.sqlite
 *.sqlite3
 
-cache/
-data/
-*.index
-*.npy
-*.pkl
+
 .DS_Store
-Thumbs.db
-
-.streamlit/
-
-.pytest_cache/
+Thumbs.DB
 
 .vscode/
 .idea/
+
+.pytest_cache/
+
+.streamlit/secrets.toml
+
+docker-compose.override.yml
