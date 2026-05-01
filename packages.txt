@@ -1,1 +1,2 @@
-faiss-cpu
+libopenblas-dev
+libgomp1
