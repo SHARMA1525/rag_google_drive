@@ -74,14 +74,15 @@ docker-compose up --build
 
 ```json
 {
-  "query": "What is our company refund policy?"
+  "query": "what is quantum computing?"
 }
 ```
 
 **Response:**
 ```json
 {
-  "answer": "Our company refund policy allows for full refunds within 30 days of purchase for unused services. After 30 days, we offer credit towards future services.",
-  "sources": ["refund_policy.pdf", "service_terms.docx"]
+    "answer": "Quantum computing represents one of the most transformative technological advancements of the twenty-first century. It leverages the principles of quantum mechanics, specifically superposition and entanglement, to             perform computations at an exponentially higher speed than classical computers.
+    ",
+  "sources": ["quantum_computing_case_study.pdf.pdf"]
 }
 ```
