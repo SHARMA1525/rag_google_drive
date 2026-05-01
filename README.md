@@ -81,8 +81,7 @@ docker-compose up --build
 **Response:**
 ```json
 {
-    "answer": "Quantum computing represents one of the most transformative technological advancements of the twenty-first century. It leverages the principles of quantum mechanics, specifically superposition and entanglement, to             perform computations at an exponentially higher speed than classical computers.
-    ",
+"answer": "Quantum computing represents one of the most transformative technological advancements of the twenty-first century. It leverages the principles of quantum mechanics, specifically superposition and entanglement, to             perform computations at an exponentially higher speed than classical computers.",
   "sources": ["quantum_computing_case_study.pdf.pdf"]
 }
 ```
